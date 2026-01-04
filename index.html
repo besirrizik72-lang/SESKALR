@@ -1,24 +1,27 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <title>Besir AR Engine v1.0</title>
+    <title>Besir AR Engine v1.1</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
-        
-        /* MÜŞTERİNİN GÖRECEĞİ ÖZEL MENÜ */
+        body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #f0f0f0; }
         #ar-ui {
             position: absolute; bottom: 30px; left: 0; width: 100%;
-            display: flex; justify-content: center; gap: 15px; z-index: 10;
-            pointer-events: none; /* Kamera etkileşimini engellememesi için */
+            display: flex; justify-content: center; gap: 10px; z-index: 100;
         }
         .btn {
-            padding: 12px 20px; background: rgba(0, 123, 255, 0.8); color: white;
-            border-radius: 25px; border: none; font-weight: bold;
-            pointer-events: auto; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 15px 20px; background: #007bff; color: white;
+            border-radius: 30px; border: none; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .btn:active { transform: scale(0.9); }
+        /* AR Başlatma butonu için özel stil */
+        #ARButton {
+            position: absolute !important; bottom: 100px !important;
+            left: 50% !important; transform: translateX(-50%) !important;
+            background: #000 !important; color: #fff !important;
+            padding: 20px !important; font-size: 18px !important;
+        }
     </style>
 </head>
 <body>
@@ -34,65 +37,52 @@
         import { ARButton } from 'https://unpkg.com/three@0.150.1/examples/jsm/webxr/ARButton.js';
         import { GLTFLoader } from 'https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
 
-        let container, scene, camera, renderer, loader;
-        let controller; // Telefonun hareketini takip eder
+        let scene, camera, renderer, loader;
 
         init();
-        animate();
 
         function init() {
-            container = document.createElement('div');
-            document.body.appendChild(container);
-
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
-            // IŞIKLANDIRMA (Modellerin güzel görünmesi için)
-            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+            // Güçlü Işıklandırma (Modelin görünmesi için şart)
+            const light = new THREE.AmbientLight(0xffffff, 2);
             scene.add(light);
+            const directLight = new THREE.DirectionalLight(0xffffff, 1);
+            directLight.position.set(0, 5, 5);
+            scene.add(directLight);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true; // AR modunu aktif et
-            container.appendChild(renderer.domElement);
+            renderer.xr.enabled = true;
+            document.body.appendChild(renderer.domElement);
 
-            // AR BAŞLATMA BUTONU
-            document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
+            // AR Butonunu Ekle
+            const btn = ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] });
+            btn.id = "ARButton";
+            document.body.appendChild(btn);
 
             loader = new GLTFLoader();
-
-            // Pencere boyutu değişirse uyum sağla
-            window.addEventListener('resize', onWindowResize);
+            renderer.setAnimationLoop(() => { renderer.render(scene, camera); });
         }
 
-        // BU FONKSİYON MODELLERİ ÇAĞIRIR
-        window.ekle = function(dosyaAdi) {
-            const path = 'https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/' + dosyaAdi;
+        window.ekle = function(name) {
+            const url = 'https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/' + name;
+            console.log("Yükleniyor: " + url);
             
-            loader.load(path, function(gltf) {
+            loader.load(url, (gltf) => {
                 const model = gltf.scene;
-                // Modeli kameranın tam önüne yerleştir
-                model.position.set(0, -0.5, -1); 
-                model.scale.set(0.5, 0.5, 0.5); // Boyutu ayarla
+                // Modeli kameranın 1 metre önüne koy
+                model.position.set(0, -0.5, -1);
+                model.scale.set(1, 1, 1);
                 scene.add(model);
-                alert(dosyaAdi + " Odaya Eklendi!");
+                alert(name + " eklendi! Kamerayı etrafa çevir.");
+            }, undefined, (error) => {
+                alert("Model yüklenemedi: " + name);
+                console.error(error);
             });
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            renderer.setAnimationLoop(render);
-        }
-
-        function render() {
-            renderer.render(scene, camera);
-        }
+        };
     </script>
 </body>
 </html>
