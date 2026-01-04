@@ -1,91 +1,98 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Besir Tasarım Merkezi</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <title>Besir AR Engine v1.0</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; }
-        .header { padding: 25px; text-align: center; border-bottom: 1px solid #333; }
-        model-viewer { width: 100%; height: 40vh; background: #111; }
-        .shop-container { padding: 20px; }
-        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .product-card { 
-            background: #1a1a1a; border-radius: 15px; padding: 15px; text-align: center;
-            border: 2px solid transparent; transition: 0.3s; position: relative;
-        }
-        .product-card.selected { border-color: #007bff; background: #1e2a3a; }
-        .product-card img { width: 60px; margin-bottom: 10px; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
         
-        .floating-footer { 
-            position: fixed; bottom: 0; width: 100%; background: #1a1a1a; 
-            padding: 20px; border-top: 1px solid #333; display: none; 
-            box-sizing: border-box;
+        /* MÜŞTERİNİN GÖRECEĞİ ÖZEL MENÜ */
+        #ar-ui {
+            position: absolute; bottom: 30px; left: 0; width: 100%;
+            display: flex; justify-content: center; gap: 15px; z-index: 10;
+            pointer-events: none; /* Kamera etkileşimini engellememesi için */
         }
-        .ar-launch-btn { 
-            background: #28a745; color: white; width: 100%; padding: 18px; 
-            border-radius: 12px; font-weight: bold; border: none; font-size: 16px;
+        .btn {
+            padding: 12px 20px; background: rgba(0, 123, 255, 0.8); color: white;
+            border-radius: 25px; border: none; font-weight: bold;
+            pointer-events: auto; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        .btn:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
 
-<div class="header"><strong>BESİR İÇ MİMARLIK</strong></div>
-
-<model-viewer id="main-view" src="2LIKOLTUK_RDTAND.glb" camera-controls auto-rotate shadow-intensity="1"></model-viewer>
-
-<div class="shop-container">
-    <p style="color: #888;">Evinize eklemek istediğiniz parçaları seçin:</p>
-    <div class="product-grid">
-        <div class="product-card" onclick="toggleSelection(this, '2LIKOLTUK_RDTAND.glb')">
-            <span>🛋️</span><br>2'li Koltuk
-        </div>
-        <div class="product-card" onclick="toggleSelection(this, '4BITERKOLTUK.glb')">
-            <span>🪑</span><br>Berjer
-        </div>
-        <div class="product-card" onclick="toggleSelection(this, 'BITTERSEHPA.glb')">
-            <span>☕</span><br>Sehpa
-        </div>
+    <div id="ar-ui">
+        <button class="btn" onclick="ekle('2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk</button>
+        <button class="btn" onclick="ekle('4BITERKOLTUK.glb')">🪑 Berjer</button>
+        <button class="btn" onclick="ekle('BITTERSEHPA.glb')">☕ Sehpa</button>
     </div>
-</div>
 
-<div id="footer" class="floating-footer">
-    <button class="ar-launch-btn" onclick="launchAR()">SEÇİLENLERİ ODAMA DİZ</button>
-</div>
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
+        import { ARButton } from 'https://unpkg.com/three@0.150.1/examples/jsm/webxr/ARButton.js';
+        import { GLTFLoader } from 'https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
 
-<script>
-    let basket = [];
-    const viewer = document.querySelector('#main-view');
+        let container, scene, camera, renderer, loader;
+        let controller; // Telefonun hareketini takip eder
 
-    function toggleSelection(el, model) {
-        const index = basket.indexOf(model);
-        if (index > -1) {
-            basket.splice(index, 1);
-            el.classList.remove('selected');
-        } else {
-            basket.push(model);
-            el.classList.add('selected');
-            viewer.src = model; // Önizlemeyi değiştir
+        init();
+        animate();
+
+        function init() {
+            container = document.createElement('div');
+            document.body.appendChild(container);
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+
+            // IŞIKLANDIRMA (Modellerin güzel görünmesi için)
+            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+            scene.add(light);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true; // AR modunu aktif et
+            container.appendChild(renderer.domElement);
+
+            // AR BAŞLATMA BUTONU
+            document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
+
+            loader = new GLTFLoader();
+
+            // Pencere boyutu değişirse uyum sağla
+            window.addEventListener('resize', onWindowResize);
         }
-        
-        document.getElementById('footer').style.display = basket.length > 0 ? 'block' : 'none';
-        document.querySelector('.ar-launch-btn').innerText = `SEÇİLENLERİ (${basket.length}) ODAMA DİZ`;
-    }
 
-    function launchAR() {
-        // TÜM MODELLERİ TEK BİR SAHNE OLARAK GÖNDEREN KRİTİK KOMUT
-        const rawBase = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
-        let intent = "intent://arvr.google.com/scene-viewer/1.0?";
-        
-        // Her bir model için 'file' parametresi eklenir
-        let fileParams = basket.map(m => "file=" + encodeURIComponent(rawBase + m)).join("&");
-        
-        let finalUrl = intent + fileParams + "&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;";
-        
-        window.location.href = finalUrl;
-    }
-</script>
+        // BU FONKSİYON MODELLERİ ÇAĞIRIR
+        window.ekle = function(dosyaAdi) {
+            const path = 'https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/' + dosyaAdi;
+            
+            loader.load(path, function(gltf) {
+                const model = gltf.scene;
+                // Modeli kameranın tam önüne yerleştir
+                model.position.set(0, -0.5, -1); 
+                model.scale.set(0.5, 0.5, 0.5); // Boyutu ayarla
+                scene.add(model);
+                alert(dosyaAdi + " Odaya Eklendi!");
+            });
+        }
 
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            renderer.setAnimationLoop(render);
+        }
+
+        function render() {
+            renderer.render(scene, camera);
+        }
+    </script>
 </body>
 </html>
