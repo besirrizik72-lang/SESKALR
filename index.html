@@ -3,50 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Besir AR Katalog</title>
+    <title>Besir Çoklu Katalog</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #000; color: white; }
-        model-viewer { width: 100%; height: 70vh; --poster-color: transparent; }
-        .controls { padding: 20px; background: #111; border-top: 2px solid #222; }
-        .menu { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; }
+        body { margin: 0; font-family: sans-serif; background: #121212; color: white; }
+        .header { padding: 15px; text-align: center; background: #1f1f1f; border-bottom: 2px solid #007bff; }
+        model-viewer { width: 100%; height: 45vh; background-color: #1a1a1a; }
+        .controls { padding: 20px; background: #1f1f1f; border-radius: 25px 25px 0 0; margin-top: -20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .card { 
-            min-width: 100px; background: #222; padding: 10px; border-radius: 10px; 
-            text-align: center; border: 2px solid transparent; cursor: pointer;
+            background: #2a2a2a; border-radius: 12px; padding: 15px; text-align: center;
+            border: 2px solid transparent; transition: 0.3s;
         }
-        .card.active { border-color: #007bff; background: #111; }
-        .ar-btn { 
-            background: #28a745; color: white; border: none; border-radius: 10px; 
-            padding: 15px; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px;
+        .card.selected { border-color: #007bff; background: #1e2a3a; }
+        .btn { 
+            background: #28a745; color: white; border: none; border-radius: 12px; 
+            padding: 18px; width: 100%; font-size: 16px; font-weight: bold; display: none;
         }
     </style>
 </head>
 <body>
 
-<model-viewer id="viewer" src="2LIKOLTUK_RDTAND.glb" ar ar-modes="scene-viewer webxr quick-look" camera-controls shadow-intensity="2" environment-image="neutral">
-    <button slot="ar-button" style="display:none;"></button>
-</model-viewer>
+<div class="header"><strong>BESİR MOBİLYA</strong></div>
+<model-viewer id="p" src="2LIKOLTUK_RDTAND.glb" camera-controls auto-rotate></model-viewer>
 
 <div class="controls">
-    <div class="menu">
-        <div class="card active" onclick="yukle(this, '2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk</div>
-        <div class="card" onclick="yukle(this, '4BITERKOLTUK.glb')">🪑 Berjer</div>
-        <div class="card" onclick="yukle(this, 'BITTERSEHPA.glb')">☕ Sehpa</div>
+    <div class="grid">
+        <div class="card" onclick="t(this, '2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk</div>
+        <div class="card" onclick="t(this, '4BITERKOLTUK.glb')">🪑 Berjer</div>
+        <div class="card" onclick="t(this, 'BITTERSEHPA.glb')">☕ Sehpa</div>
     </div>
-    <button class="ar-btn" onclick="ac()">🏠 SEÇİLENİ ODAYA EKLE</button>
+    <button id="go" class="btn" onclick="openAR()">SEÇİLENLERİ ODAYA DİZ</button>
 </div>
 
 <script>
-    const v = document.querySelector('#viewer');
-    function yukle(el, dosya) {
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        v.src = dosya;
+    let s = [];
+    function t(el, f) {
+        let i = s.indexOf(f);
+        if(i > -1) { s.splice(i, 1); el.classList.remove('selected'); }
+        else { s.push(f); el.classList.add('selected'); document.getElementById('p').src = f; }
+        document.getElementById('go').style.display = s.length > 0 ? 'block' : 'none';
+        document.getElementById('go').innerText = `SEÇİLENLERİ (${s.length}) ODAYA DİZ`;
     }
-    function ac() {
-        v.activateAR();
+
+    function openAR() {
+        let base = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
+        let files = s.map(f => "file=" + encodeURIComponent(base + f)).join("&");
+        window.location.href = `intent://arvr.google.com/scene-viewer/1.0?${files}&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
     }
 </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Besir Çoklu Katalog</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #121212; color: white; }
+        .header { padding: 15px; text-align: center; background: #1f1f1f; border-bottom: 2px solid #007bff; }
+        model-viewer { width: 100%; height: 45vh; background-color: #1a1a1a; }
+        .controls { padding: 20px; background: #1f1f1f; border-radius: 25px 25px 0 0; margin-top: -20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .card { 
+            background: #2a2a2a; border-radius: 12px; padding: 15px; text-align: center;
+            border: 2px solid transparent; transition: 0.3s;
+        }
+        .card.selected { border-color: #007bff; background: #1e2a3a; }
+        .btn { 
+            background: #28a745; color: white; border: none; border-radius: 12px; 
+            padding: 18px; width: 100%; font-size: 16px; font-weight: bold; display: none;
+        }
+    </style>
+</head>
+<body>
 
+<div class="header"><strong>BESİR MOBİLYA</strong></div>
+<model-viewer id="p" src="2LIKOLTUK_RDTAND.glb" camera-controls auto-rotate></model-viewer>
+
+<div class="controls">
+    <div class="grid">
+        <div class="card" onclick="t(this, '2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk</div>
+        <div class="card" onclick="t(this, '4BITERKOLTUK.glb')">🪑 Berjer</div>
+        <div class="card" onclick="t(this, 'BITTERSEHPA.glb')">☕ Sehpa</div>
+    </div>
+    <button id="go" class="btn" onclick="openAR()">SEÇİLENLERİ ODAYA DİZ</button>
+</div>
+
+<script>
+    let s = [];
+    function t(el, f) {
+        let i = s.indexOf(f);
+        if(i > -1) { s.splice(i, 1); el.classList.remove('selected'); }
+        else { s.push(f); el.classList.add('selected'); document.getElementById('p').src = f; }
+        document.getElementById('go').style.display = s.length > 0 ? 'block' : 'none';
+        document.getElementById('go').innerText = `SEÇİLENLERİ (${s.length}) ODAYA DİZ`;
+    }
+
+    function openAR() {
+        let base = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
+        let files = s.map(f => "file=" + encodeURIComponent(base + f)).join("&");
+        window.location.href = `intent://arvr.google.com/scene-viewer/1.0?${files}&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
+    }
+</script>
 </body>
 </html>
