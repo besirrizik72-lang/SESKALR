@@ -1,62 +1,13 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Besir Tasarım App</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <style>
-        body { margin: 0; background: #ffffff; font-family: sans-serif; }
-        
-        /* Müşterinin seçeceği menü */
-        #menu-container {
-            position: fixed; bottom: 20px; width: 100%;
-            display: flex; justify-content: center; gap: 10px; z-index: 999;
-        }
-        .item-btn {
-            padding: 12px 15px; background: #007bff; color: white;
-            border-radius: 15px; border: none; font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        model-viewer {
-            width: 100vw; height: 80vh; background-color: #f8f9fa;
-        }
-        .ar-trigger {
-            position: fixed; top: 20px; right: 20px;
-            padding: 15px; background: #28a745; color: white;
-            border-radius: 10px; border: none; font-weight: bold;
-        }
-    </style>
-</head>
-<body>
+function startAR() {
+    const base = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
+    
+    // Google'a 3 dosyayı birden tanıtan özel komut dizini
+    const model1 = encodeURIComponent(base + "2LIKOLTUK_RDTAND.glb");
+    const model2 = encodeURIComponent(base + "4BITERKOLTUK.glb");
+    const model3 = encodeURIComponent(base + "BITTERSEHPA.glb");
 
-    <button class="ar-trigger" onclick="startAR()">🏠 EVİNDE GÖR</button>
-
-    <model-viewer id="besir-motor" 
-        src="2LIKOLTUK_RDTAND.glb" 
-        ar ar-modes="scene-viewer webxr" 
-        camera-controls touch-action="none"
-        shadow-intensity="1">
-    </model-viewer>
-
-    <div id="menu-container">
-        <button class="item-btn" onclick="degistir('2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk</button>
-        <button class="item-btn" onclick="degistir('4BITERKOLTUK.glb')">🪑 Berjer</button>
-        <button class="item-btn" onclick="degistir('BITTERSEHPA.glb')">☕ Sehpa</button>
-    </div>
-
-    <script>
-        const viewer = document.getElementById('besir-motor');
-
-        // Modeli değiştiren fonksiyon
-        function degistir(dosya) {
-            viewer.src = dosya;
-        }
-
-        // AR modunu başlatan fonksiyon
-        function startAR() {
-            viewer.activateAR();
-        }
-    </script>
-</body>
-</html>
+    // 'link' parametresi ile birden fazla objeyi aynı sahnede zorluyoruz
+    const intent = `intent://arvr.google.com/scene-viewer/1.0?file=${model1}&link=${model2}&link=${model3}&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
+    
+    window.location.href = intent;
+}
