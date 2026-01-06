@@ -1,79 +1,61 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <title>Besir AR Pro Engine</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Besir Tasarım App</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; }
-        #menu {
-            position: absolute; bottom: 20px; left: 0; width: 100%;
+        body { margin: 0; background: #ffffff; font-family: sans-serif; }
+        
+        /* Müşterinin seçeceği menü */
+        #menu-container {
+            position: fixed; bottom: 20px; width: 100%;
             display: flex; justify-content: center; gap: 10px; z-index: 999;
         }
-        .btn {
-            padding: 12px 18px; background: #007bff; color: white;
-            border-radius: 12px; border: none; font-weight: bold;
+        .item-btn {
+            padding: 12px 15px; background: #007bff; color: white;
+            border-radius: 15px; border: none; font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        model-viewer {
+            width: 100vw; height: 80vh; background-color: #f8f9fa;
+        }
+        .ar-trigger {
+            position: fixed; top: 20px; right: 20px;
+            padding: 15px; background: #28a745; color: white;
+            border-radius: 10px; border: none; font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div id="menu">
-        <button class="btn" onclick="addModel('2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk</button>
-        <button class="btn" onclick="addModel('4BITERKOLTUK.glb')">🪑 Berjer</button>
-        <button class="btn" onclick="addModel('BITTERSEHPA.glb')">☕ Sehpa</button>
+
+    <button class="ar-trigger" onclick="startAR()">🏠 EVİNDE GÖR</button>
+
+    <model-viewer id="besir-motor" 
+        src="2LIKOLTUK_RDTAND.glb" 
+        ar ar-modes="scene-viewer webxr" 
+        camera-controls touch-action="none"
+        shadow-intensity="1">
+    </model-viewer>
+
+    <div id="menu-container">
+        <button class="item-btn" onclick="degistir('2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk</button>
+        <button class="item-btn" onclick="degistir('4BITERKOLTUK.glb')">🪑 Berjer</button>
+        <button class="item-btn" onclick="degistir('BITTERSEHPA.glb')">☕ Sehpa</button>
     </div>
 
-    <script type="module">
-        import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
-        import { ARButton } from 'https://unpkg.com/three@0.150.1/examples/jsm/webxr/ARButton.js';
-        import { GLTFLoader } from 'https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
+    <script>
+        const viewer = document.getElementById('besir-motor');
 
-        let scene, camera, renderer, loader;
-        let models = [];
-
-        init();
-
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-
-            // Ortam ışığı ve güneş ışığı ekleyelim
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-            scene.add(ambientLight);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            document.body.appendChild(renderer.domElement);
-
-            // AR Başlatma Butonu (Kamera izni ister)
-            document.body.appendChild(ARButton.createButton(renderer));
-
-            loader = new GLTFLoader();
-
-            renderer.setAnimationLoop(() => {
-                renderer.render(scene, camera);
-            });
+        // Modeli değiştiren fonksiyon
+        function degistir(dosya) {
+            viewer.src = dosya;
         }
 
-        // BU BİZİM ÖZEL MODEL EKLEME YAZILIMIMIZ
-        window.addModel = function(fileName) {
-            const url = 'https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/' + fileName;
-            
-            loader.load(url, (gltf) => {
-                const model = gltf.scene;
-                
-                // Modeli kameranın baktığı yere, 1 metre ileriye koy
-                const vector = new THREE.Vector3(0, 0, -1.5);
-                vector.applyQuaternion(camera.quaternion);
-                
-                model.position.copy(camera.position).add(vector);
-                model.scale.set(1, 1, 1); // Gerekirse buradan büyüt/küçült
-                
-                scene.add(model);
-                models.push(model);
-            });
+        // AR modunu başlatan fonksiyon
+        function startAR() {
+            viewer.activateAR();
         }
     </script>
 </body>
