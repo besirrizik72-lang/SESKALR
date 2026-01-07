@@ -3,44 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Besir Bitter Koleksiyonu</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <title>Besir Mobilya Seti</title>
     <style>
-        body { margin: 0; background: #fdfdfd; font-family: sans-serif; }
-        .footer { 
-            position: fixed; bottom: 30px; width: 100%; 
-            display: flex; justify-content: center; z-index: 10; 
+        body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f4f4f4; font-family: sans-serif; }
+        .setup-container { text-align: center; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .go-btn { 
+            padding: 20px 40px; background: #28a745; color: white; 
+            border: none; border-radius: 50px; font-weight: bold; font-size: 20px;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
         }
-        .ar-btn { 
-            padding: 18px 35px; background: #28a745; color: white; 
-            border-radius: 50px; border: none; font-weight: bold; 
-            font-size: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); 
-            cursor: pointer;
-        }
-        model-viewer { width: 100vw; height: 85vh; }
-        h1 { text-align: center; color: #333; font-size: 20px; padding-top: 10px; }
+        h2 { color: #333; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <h1>Besir Bitter Oda Seti</h1>
+    <div class="setup-container">
+        <h2>Bitter Oda Seti Hazır</h2>
+        <p>Aşağıdaki butona basarak 3 mobilyayı da odana yerleştir.<br>Yerleştikten sonra her birini tek tek hareket ettirebilirsin.</p>
+        <button class="go-btn" onclick="openAR()">🏠 ODAMI DÖŞE</button>
+    </div>
 
-    <model-viewer 
-        src="toplu_bitter.glb" 
-        ar 
-        ar-modes="scene-viewer webxr" 
-        camera-controls 
-        shadow-intensity="2"
-        exposure="1"
-        environment-image="neutral">
-        
-        <div class="footer">
-            <button class="ar-btn" onclick="document.querySelector('model-viewer').activateAR()">
-                🏠 SETİ ODANA YERLEŞTİR
-            </button>
-        </div>
-        
-    </model-viewer>
+    <script>
+        function openAR() {
+            // Dosyalarının olduğu klasörün internet adresi
+            const baseUrl = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
+            
+            // GitHub'da duran gerçek dosya isimlerin (Büyük-küçük harfe duyarlıdır!)
+            const model1 = encodeURIComponent(baseUrl + "2LIKOLTUK_RDTAND.glb");
+            const model2 = encodeURIComponent(baseUrl + "4BITERKOLTUK.glb");
+            const model3 = encodeURIComponent(baseUrl + "BITTERSEHPA.glb");
+
+            // Google AR (Scene Viewer) Intent Komutu
+            // Bu komut sayesinde her dosya BAĞIMSIZ olarak gelir.
+            const intent = `intent://arvr.google.com/scene-viewer/1.0?file=${model1}&link=${model2}&link=${model3}&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
+            
+            window.location.href = intent;
+        }
+    </script>
 
 </body>
 </html>
