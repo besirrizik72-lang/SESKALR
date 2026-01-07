@@ -3,39 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Besir Mobilya Seti</title>
+    <title>Besir Mobilya Yeni Set</title>
     <style>
-        body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f4f4f4; font-family: sans-serif; }
-        .setup-container { text-align: center; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .go-btn { 
-            padding: 20px 40px; background: #28a745; color: white; 
-            border: none; border-radius: 50px; font-weight: bold; font-size: 20px;
-            cursor: pointer; box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #eee; font-family: sans-serif; }
+        .container { text-align: center; background: white; padding: 40px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .btn { 
+            padding: 25px 50px; background: #007bff; color: white; 
+            border: none; border-radius: 60px; font-weight: bold; font-size: 22px;
+            cursor: pointer; transition: 0.3s;
         }
-        h2 { color: #333; margin-bottom: 20px; }
+        .btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-    <div class="setup-container">
-        <h2>Bitter Oda Seti Hazır</h2>
-        <p>Aşağıdaki butona basarak 3 mobilyayı da odana yerleştir.<br>Yerleştikten sonra her birini tek tek hareket ettirebilirsin.</p>
-        <button class="go-btn" onclick="openAR()">🏠 ODAMI DÖŞE</button>
+    <div class="container">
+        <h2>Oda Seti Yükleniyor...</h2>
+        <p>1, 2 ve 3 numaralı modeller hazırlanıyor.</p>
+        <button class="btn" onclick="acAR()">🏠 TASARIMA BAŞLA</button>
     </div>
 
     <script>
-        function openAR() {
-            // Dosyalarının olduğu klasörün internet adresi
-            const baseUrl = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
+        function acAR() {
+            // Senin GitHub adresin
+            const base = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
             
-            // GitHub'da duran gerçek dosya isimlerin (Büyük-küçük harfe duyarlıdır!)
-            const model1 = encodeURIComponent(baseUrl + "2LIKOLTUK_RDTAND.glb");
-            const model2 = encodeURIComponent(baseUrl + "4BITERKOLTUK.glb");
-            const model3 = encodeURIComponent(baseUrl + "BITTERSEHPA.glb");
+            // Yeni sade isimlerin
+            const m1 = encodeURIComponent(base + "1.glb");
+            const m2 = encodeURIComponent(base + "2.glb");
+            const m3 = encodeURIComponent(base + "3.glb");
 
-            // Google AR (Scene Viewer) Intent Komutu
-            // Bu komut sayesinde her dosya BAĞIMSIZ olarak gelir.
-            const intent = `intent://arvr.google.com/scene-viewer/1.0?file=${model1}&link=${model2}&link=${model3}&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
+            // Google AR komutu
+            const intent = `intent://arvr.google.com/scene-viewer/1.0?file=${m1}&link=${m2}&link=${m3}&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
             
             window.location.href = intent;
         }
