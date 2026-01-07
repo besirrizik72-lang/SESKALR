@@ -1,76 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-    <meta charset="utf-8">
-    <title>Besir Özel AR Yazılımı</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Besir Mobilya Seti</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        #ar-menu {
-            position: absolute; bottom: 20px; left: 0; width: 100%;
-            display: flex; justify-content: center; gap: 10px; z-index: 999;
+        body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f4f4f4; font-family: sans-serif; }
+        .setup-container { text-align: center; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .go-btn { 
+            padding: 20px 40px; background: #28a745; color: white; 
+            border: none; border-radius: 50px; font-weight: bold; font-size: 20px;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
         }
-        .btn {
-            padding: 12px; background: rgba(0, 123, 255, 0.9); color: white;
-            border: none; border-radius: 10px; font-weight: bold;
-        }
+        h2 { color: #333; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div id="ar-menu">
-        <button class="btn" onclick="modelEkle('2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk Ekle</button>
-        <button class="btn" onclick="modelEkle('4BITERKOLTUK.glb')">🪑 Berjer Ekle</button>
-        <button class="btn" onclick="modelEkle('BITTERSEHPA.glb')">☕ Sehpa Ekle</button>
+
+    <div class="setup-container">
+        <h2>Bitter Oda Seti Hazır</h2>
+        <p>Aşağıdaki butona basarak 3 mobilyayı da odana yerleştir.<br>Yerleştikten sonra her birini tek tek hareket ettirebilirsin.</p>
+        <button class="go-btn" onclick="openAR()">🏠 ODAMI DÖŞE</button>
     </div>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
-            }
+    <script>
+        function openAR() {
+            // Dosyalarının olduğu klasörün internet adresi
+            const baseUrl = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
+            
+            // GitHub'da duran gerçek dosya isimlerin (Büyük-küçük harfe duyarlıdır!)
+            const model1 = encodeURIComponent(baseUrl + "2LIKOLTUK_RDTAND.glb");
+            const model2 = encodeURIComponent(baseUrl + "4BITERKOLTUK.glb");
+            const model3 = encodeURIComponent(baseUrl + "BITTERSEHPA.glb");
+
+            // Google AR (Scene Viewer) Intent Komutu
+            // Bu komut sayesinde her dosya BAĞIMSIZ olarak gelir.
+            const intent = `intent://arvr.google.com/scene-viewer/1.0?file=${model1}&link=${model2}&link=${model3}&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
+            
+            window.location.href = intent;
         }
     </script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { ARButton } from 'three/addons/webxr/ARButton.js';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-        let scene, camera, renderer, loader;
-
-        init();
-
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-
-            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-            scene.add(light);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            document.body.appendChild(renderer.domElement);
-
-            // AR Başlatma Butonu
-            document.body.appendChild(ARButton.createButton(renderer));
-
-            loader = new GLTFLoader();
-            renderer.setAnimationLoop(() => renderer.render(scene, camera));
-        }
-
-        window.modelEkle = function(dosya) {
-            const url = 'https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/' + dosya;
-            loader.load(url, (gltf) => {
-                const model = gltf.scene;
-                // Modeli kameranın 1.5 metre önüne koy
-                const pos = new THREE.Vector3(0, 0, -1.5).applyQuaternion(camera.quaternion);
-                model.position.copy(camera.position).add(pos);
-                scene.add(model);
-            });
-        }
-    </script>
 </body>
 </html>
