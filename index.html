@@ -1,76 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-    <meta charset="utf-8">
-    <title>Besir Özel AR Yazılımı</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Besir Bitter Koleksiyonu</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        #ar-menu {
-            position: absolute; bottom: 20px; left: 0; width: 100%;
-            display: flex; justify-content: center; gap: 10px; z-index: 999;
+        body { margin: 0; background: #fdfdfd; font-family: sans-serif; }
+        .footer { 
+            position: fixed; bottom: 30px; width: 100%; 
+            display: flex; justify-content: center; z-index: 10; 
         }
-        .btn {
-            padding: 12px; background: rgba(0, 123, 255, 0.9); color: white;
-            border: none; border-radius: 10px; font-weight: bold;
+        .ar-btn { 
+            padding: 18px 35px; background: #28a745; color: white; 
+            border-radius: 50px; border: none; font-weight: bold; 
+            font-size: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); 
+            cursor: pointer;
         }
+        model-viewer { width: 100vw; height: 85vh; }
+        h1 { text-align: center; color: #333; font-size: 20px; padding-top: 10px; }
     </style>
 </head>
 <body>
-    <div id="ar-menu">
-        <button class="btn" onclick="modelEkle('2LIKOLTUK_RDTAND.glb')">🛋️ Koltuk Ekle</button>
-        <button class="btn" onclick="modelEkle('4BITERKOLTUK.glb')">🪑 Berjer Ekle</button>
-        <button class="btn" onclick="modelEkle('BITTERSEHPA.glb')">☕ Sehpa Ekle</button>
-    </div>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
-            }
-        }
-    </script>
+    <h1>Besir Bitter Oda Seti</h1>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { ARButton } from 'three/addons/webxr/ARButton.js';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    <model-viewer 
+        src="toplu_bitter.glb" 
+        ar 
+        ar-modes="scene-viewer webxr" 
+        camera-controls 
+        shadow-intensity="2"
+        exposure="1"
+        environment-image="neutral">
+        
+        <div class="footer">
+            <button class="ar-btn" onclick="document.querySelector('model-viewer').activateAR()">
+                🏠 SETİ ODANA YERLEŞTİR
+            </button>
+        </div>
+        
+    </model-viewer>
 
-        let scene, camera, renderer, loader;
-
-        init();
-
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-
-            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-            scene.add(light);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            document.body.appendChild(renderer.domElement);
-
-            // AR Başlatma Butonu
-            document.body.appendChild(ARButton.createButton(renderer));
-
-            loader = new GLTFLoader();
-            renderer.setAnimationLoop(() => renderer.render(scene, camera));
-        }
-
-        window.modelEkle = function(dosya) {
-            const url = 'https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/' + dosya;
-            loader.load(url, (gltf) => {
-                const model = gltf.scene;
-                // Modeli kameranın 1.5 metre önüne koy
-                const pos = new THREE.Vector3(0, 0, -1.5).applyQuaternion(camera.quaternion);
-                model.position.copy(camera.position).add(pos);
-                scene.add(model);
-            });
-        }
-    </script>
 </body>
 </html>
