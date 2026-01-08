@@ -1,42 +1,48 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Besir Mobilya Yeni Set</title>
+    <title>Besir AR Pro Editor</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background: #eee; font-family: sans-serif; }
-        .container { text-align: center; background: white; padding: 40px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-        .btn { 
-            padding: 25px 50px; background: #007bff; color: white; 
-            border: none; border-radius: 60px; font-weight: bold; font-size: 22px;
-            cursor: pointer; transition: 0.3s;
+        body { margin: 0; overflow: hidden; }
+        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
+        
+        /* Alt Menü - Mobilya Seçici */
+        .menu {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; background: rgba(255,255,255,0.8);
+            padding: 15px; border-radius: 50px; backdrop-filter: blur(10px); z-index: 100;
         }
-        .btn:active { transform: scale(0.95); }
+        .item {
+            width: 60px; height: 60px; border-radius: 50%; border: 2px solid #007bff;
+            cursor: pointer; background-size: cover; background-position: center;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>Oda Seti Yükleniyor...</h2>
-        <p>1, 2 ve 3 numaralı modeller hazırlanıyor.</p>
-        <button class="btn" onclick="acAR()">🏠 TASARIMA BAŞLA</button>
-    </div>
+    <model-viewer id="besir-motor" 
+        src="1.glb" 
+        ar 
+        ar-modes="webxr" 
+        camera-controls 
+        ar-placement="floor"
+        shadow-intensity="1">
+        
+        <div class="menu" slot="ui">
+            <div class="item" style="background-image: url('koltuk_img.jpg');" onclick="degistir('1.glb')"></div>
+            <div class="item" style="background-image: url('berjer_img.jpg');" onclick="degistir('2.glb')"></div>
+            <div class="item" style="background-image: url('sehpa_img.jpg');" onclick="degistir('3.glb')"></div>
+        </div>
+
+    </model-viewer>
 
     <script>
-        function acAR() {
-            // Senin GitHub adresin
-            const base = "https://raw.githubusercontent.com/besirrizik72-lang/SESKALR/main/";
-            
-            // Yeni sade isimlerin
-            const m1 = encodeURIComponent(base + "1.glb");
-            const m2 = encodeURIComponent(base + "2.glb");
-            const m3 = encodeURIComponent(base + "3.glb");
-
-            // Google AR komutu
-            const intent = `intent://arvr.google.com/scene-viewer/1.0?file=${m1}&link=${m2}&link=${m3}&mode=ar_only#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end;`;
-            
-            window.location.href = intent;
+        const motor = document.querySelector('#besir-motor');
+        
+        function degistir(dosya) {
+            // Modeli değiştirir ama AR oturumunu kapatmaz (WebXR modunda)
+            motor.src = dosya;
         }
     </script>
 
