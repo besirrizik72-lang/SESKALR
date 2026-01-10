@@ -2,20 +2,36 @@
 <html lang="tr">
 <head>
     <meta charset="utf-8">
-    <title>Besir AR - Profesyonel Katalog</title>
+    <title>Besir Mobilya AR Profesyonel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #000; }
+        
+        /* Mobilya Seçme Menüsü */
         #menu { 
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
-            display: flex; gap: 10px; z-index: 1000; background: rgba(0,0,0,0.5);
-            padding: 15px; border-radius: 25px; backdrop-filter: blur(10px);
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
+            display: flex; gap: 10px; z-index: 3000; background: rgba(255,255,255,0.8);
+            padding: 15px; border-radius: 30px; backdrop-filter: blur(10px);
         }
         button { 
-            padding: 12px 18px; border-radius: 15px; border: none; 
-            background: white; font-weight: bold; cursor: pointer; font-size: 14px;
+            padding: 10px 15px; border-radius: 15px; border: 1px solid #333; 
+            background: white; font-weight: bold; cursor: pointer; color: #000;
         }
-        button:active { background: #ccc; }
+
+        /* START AR BUTONU AYARI (Geri getiren kod) */
+        #ARButton {
+            position: absolute !important;
+            bottom: 120px !important; /* Menünün üzerinde dursun */
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            background: #28a745 !important; /* Yeşil yaptık ki fark edilsin */
+            color: white !important;
+            border: 2px solid #fff !important;
+            padding: 15px 30px !important;
+            font-size: 18px !important;
+            z-index: 4000 !important;
+            border-radius: 10px !important;
+        }
     </style>
 </head>
 <body>
@@ -42,14 +58,12 @@
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
-            // --- GÜÇLENDİRİLMİŞ IŞIKLAR ---
-            const ambientLight = new THREE.AmbientLight(0xffffff, 2.5); // Genel aydınlatma
+            // GÜÇLÜ IŞIKLAR (Mobilya görünürlüğü için)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 3);
             scene.add(ambientLight);
-
-            const directLight = new THREE.DirectionalLight(0xffffff, 2); // Güneş gibi tepeden ışık
-            directLight.position.set(0, 5, 2);
+            const directLight = new THREE.DirectionalLight(0xffffff, 2);
+            directLight.position.set(0, 5, 0);
             scene.add(directLight);
-            // ----------------------------
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
@@ -57,11 +71,10 @@
             renderer.xr.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            // AR Butonunu ekrana ekle
-            const arBtn = ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] });
-            document.body.appendChild(arBtn);
+            // AR Butonunu başlat (Zemin tarama özelliği aktif)
+            document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
 
-            // Zemin Halka Tasarımı (Kırmızı-Beyaz yapalım ki çok net görülsün)
+            // Zemin Halkası (Kırmızı halka çıkınca dokun)
             reticle = new THREE.Mesh(
                 new THREE.RingGeometry(0.12, 0.15, 32).rotateX(-Math.PI / 2),
                 new THREE.MeshBasicMaterial({ color: 0xff0000 })
@@ -80,16 +93,12 @@
                 const loader = new GLTFLoader();
                 loader.load(window.secilenModel, function (gltf) {
                     const model = gltf.scene;
-
-                    // --- BOYUT VE MERKEZLEME AYARI ---
-                    // Model eğer çok küçükse scale değerlerini (1, 1, 1) yap.
-                    // Şu an 0.5 ile %50 küçültüyoruz ki odaya sığsın.
+                    
+                    // Boyut Ayarı (0.5 = %50 küçültür)
                     model.scale.set(0.5, 0.5, 0.5); 
                     
                     reticle.matrix.decompose(model.position, model.quaternion, new THREE.Vector3());
                     scene.add(model);
-                }, undefined, function(error) {
-                    console.error('Model yüklenemedi:', error);
                 });
             }
         }
@@ -98,7 +107,7 @@
             renderer.setAnimationLoop(render);
         }
 
-        async function render(timestamp, frame) {
+        function render(timestamp, frame) {
             if (frame) {
                 const referenceSpace = renderer.xr.getReferenceSpace();
                 const session = renderer.xr.getSession();
