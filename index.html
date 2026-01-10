@@ -1,50 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-    <title>Besir AR Pro Editor</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <meta charset="utf-8">
+    <title>Besir Mobilya AR Tasarım</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
     <style>
-        body { margin: 0; overflow: hidden; }
-        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
-        
-        /* Alt Menü - Mobilya Seçici */
-        .menu {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 10px; background: rgba(255,255,255,0.8);
-            padding: 15px; border-radius: 50px; backdrop-filter: blur(10px); z-index: 100;
-        }
-        .item {
-            width: 60px; height: 60px; border-radius: 50%; border: 2px solid #007bff;
-            cursor: pointer; background-size: cover; background-position: center;
-        }
+        body { margin: 0; font-family: sans-serif; }
+        #menu { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
+        button { padding: 12px 20px; border-radius: 25px; border: none; background: white; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.2); cursor: pointer; }
+        button:active { background: #ddd; }
     </style>
 </head>
 <body>
+    <div id="menu">
+        <button onclick="window.secilenModel = '1.glb'">🛋️ Koltuk</button>
+        <button onclick="window.secilenModel = '2.glb'">💺 Berjer</button>
+        <button onclick="window.secilenModel = '3.glb'">☕ Sehpa</button>
+    </div>
 
-    <model-viewer id="besir-motor" 
-        src="1.glb" 
-        ar 
-        ar-modes="webxr" 
-        camera-controls 
-        ar-placement="floor"
-        shadow-intensity="1">
-        
-        <div class="menu" slot="ui">
-            <div class="item" style="background-image: url('koltuk_img.jpg');" onclick="degistir('1.glb')"></div>
-            <div class="item" style="background-image: url('berjer_img.jpg');" onclick="degistir('2.glb')"></div>
-            <div class="item" style="background-image: url('sehpa_img.jpg');" onclick="degistir('3.glb')"></div>
-        </div>
+    <script type="module">
+        import * as THREE from 'three';
+        import { ARButton } from 'three/addons/webxr/ARButton.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-    </model-viewer>
+        let renderer, scene, camera, reticle;
+        window.secilenModel = '1.glb';
 
-    <script>
-        const motor = document.querySelector('#besir-motor');
-        
-        function degistir(dosya) {
-            // Modeli değiştirir ama AR oturumunu kapatmaz (WebXR modunda)
-            motor.src = dosya;
+        init();
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            // AR Butonunu ekle
+            document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
+
+            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 3);
+            scene.add(light);
+
+            // Zemini bulan halka
+            reticle = new THREE.Mesh(
+                new THREE.RingGeometry(0.15, 0.2, 32).rotateX(-Math.PI / 2),
+                new THREE.MeshBasicMaterial()
+            );
+            reticle.matrixAutoUpdate = false;
+            reticle.visible = false;
+            scene.add(reticle);
+
+            // Ekrana dokunulduğunda modeli koy
+            const controller = renderer.xr.getController(0);
+            controller.addEventListener('select', onSelect);
+            scene.add(controller);
+
+            renderer.setAnimationLoop(render);
+        }
+
+        function onSelect() {
+            if (reticle.visible) {
+                const loader = new GLTFLoader();
+                loader.load(window.secilenModel, function (gltf) {
+                    const model = gltf.scene;
+                    reticle.matrix.decompose(model.position, model.quaternion, model.scale);
+                    scene.add(model);
+                });
+            }
+        }
+
+        async function render(timestamp, frame) {
+            if (frame) {
+                const session = renderer.xr.getSession();
+                const referenceSpace = renderer.xr.getReferenceSpace();
+                if (!window.hitTestSourceRequested) {
+                    session.requestReferenceSpace('viewer').then((refSpace) => {
+                        session.requestHitTestSource({ space: refSpace }).then((source) => {
+                            window.hitTestSource = source;
+                        });
+                    });
+                    window.hitTestSourceRequested = true;
+                }
+                if (window.hitTestSource) {
+                    const hitTestResults = frame.getHitTestResults(window.hitTestSource);
+                    if (hitTestResults.length) {
+                        const hit = hitTestResults[0];
+                        reticle.visible = true;
+                        reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
+                    } else {
+                        reticle.visible = false;
+                    }
+                }
+            }
+            renderer.render(scene, camera);
         }
     </script>
-
 </body>
 </html>
