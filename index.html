@@ -1,44 +1,30 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
     <meta charset="utf-8">
-    <title>Besir AR - Odayı Döşe</title>
+    <title>Besir AR - Nik Lever Mantığı</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        #menu { 
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
-            display: flex; gap: 10px; z-index: 1000; background: rgba(0,0,0,0.7);
-            padding: 15px; border-radius: 25px;
-        }
-        button { 
-            padding: 12px; border-radius: 12px; border: none; background: white; 
-            font-weight: bold; cursor: pointer;
-        }
-        .active { background: #ffcc00; } /* Seçili butonu sarı yapar */
+        body { margin: 0; overflow: hidden; }
+        #menu { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
+        button { padding: 10px; border-radius: 10px; border: none; background: #333; color: white; cursor: pointer; }
+        button.active { background: #007bff; }
     </style>
 </head>
 <body>
     <div id="menu">
-        <button id="btn1" onclick="sec('1.glb', 'btn1')">🛋️ Koltuk</button>
-        <button id="btn2" onclick="sec('2.glb', 'btn2')">💺 Berjer</button>
-        <button id="btn3" onclick="sec('3.glb', 'btn3')">☕ Sehpa</button>
+        <button onclick="window.currentModel='1.glb'">🛋️ 1</button>
+        <button onclick="window.currentModel='2.glb'">💺 2</button>
+        <button onclick="window.currentModel='3.glb'">☕ 3</button>
     </div>
 
     <script type="module">
-        import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-        import { ARButton } from 'https://unpkg.com/three@0.160.0/examples/jsm/webxr/ARButton.js';
-        import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0/build/three.module.js';
+        import { ARButton } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/webxr/ARButton.js';
+        import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/GLTFLoader.js';
 
         let renderer, scene, camera, reticle;
-        window.secilenModel = '1.glb';
-
-        // Buton seçme fonksiyonunu global yapalım
-        window.sec = (model, id) => {
-            window.secilenModel = model;
-            document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        };
+        window.currentModel = '1.glb';
 
         init();
         animate();
@@ -46,8 +32,8 @@
         function init() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-
-            const light = new THREE.AmbientLight(0xffffff, 3);
+            
+            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
             scene.add(light);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -56,19 +42,16 @@
             renderer.xr.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            // AR Butonunu Ekle
             document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
 
-            // Zemin Halkası
             reticle = new THREE.Mesh(
-                new THREE.RingGeometry(0.1, 0.12, 32).rotateX(-Math.PI / 2),
-                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+                new THREE.RingGeometry(0.1, 0.11, 32).rotateX(-Math.PI / 2),
+                new THREE.MeshBasicMaterial()
             );
             reticle.matrixAutoUpdate = false;
             reticle.visible = false;
             scene.add(reticle);
 
-            // Dokunma Olayı
             const controller = renderer.xr.getController(0);
             controller.addEventListener('select', onSelect);
             scene.add(controller);
@@ -77,12 +60,12 @@
         function onSelect() {
             if (reticle.visible) {
                 const loader = new GLTFLoader();
-                loader.load(window.secilenModel, (gltf) => {
+                // NİK LEVER MANTIĞI: Her tıkta yeni model ekle
+                loader.load(window.currentModel, function (gltf) {
                     const model = gltf.scene;
-                    // Modeli halkanın olduğu yere koy
                     reticle.matrix.decompose(model.position, model.quaternion, model.scale);
-                    model.scale.set(0.5, 0.5, 0.5); // Boyutu burdan ayarla
-                    scene.add(model); // BU ÖNEMLİ: Sahneye ekler, eskileri silmez!
+                    model.scale.set(0.5, 0.5, 0.5); // Boyut sabitleme
+                    scene.add(model); // ESKİSİ SİLİNMEZ, YENİSİ GELİR
                 });
             }
         }
@@ -97,11 +80,10 @@
                 const referenceSpace = renderer.xr.getReferenceSpace();
                 session.requestReferenceSpace('viewer').then((refSpace) => {
                     session.requestHitTestSource({ space: refSpace }).then((source) => {
-                        const hitTestResults = frame.getHitTestResults(source);
-                        if (hitTestResults.length) {
-                            const hit = hitTestResults[0];
+                        const results = frame.getHitTestResults(source);
+                        if (results.length) {
                             reticle.visible = true;
-                            reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
+                            reticle.matrix.fromArray(results[0].getPose(referenceSpace).transform.matrix);
                         } else {
                             reticle.visible = false;
                         }
