@@ -1,95 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
     <meta charset="utf-8">
-    <title>Besir AR Kesin Cozum</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Besir AR Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; }
-        #info { position: absolute; top: 10px; width: 100%; text-align: center; z-index: 100; color: white; background: rgba(0,0,0,0.5); }
-        #menu { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
-        button { padding: 12px; border-radius: 10px; border: none; background: white; font-weight: bold; }
+        body { margin: 0; background: #ffffff; }
+        model-viewer { width: 100vw; height: 100vh; }
+        .controls { 
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
+            display: flex; gap: 10px; z-index: 100; background: white; padding: 10px; border-radius: 20px;
+        }
+        button { padding: 10px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="info">Sistem Bekleniyor...</div>
-    <div id="menu">
-        <button onclick="window.secilen = '1.glb'">🛋️ Koltuk</button>
-        <button onclick="window.secilen = '2.glb'">💺 Berjer</button>
-        <button onclick="window.secilen = '3.glb'">☕ Sehpa</button>
-    </div>
 
-    <script type="module">
-        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0/build/three.module.js';
-        import { ARButton } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/webxr/ARButton.js';
-        import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/GLTFLoader.js';
+    <model-viewer id="besir" src="1.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls shadow-intensity="1">
+        <div class="controls">
+            <button onclick="degistir('1.glb')">1.GLB</button>
+            <button onclick="degistir('2.glb')">2.GLB</button>
+            <button onclick="degistir('https://modelviewer.dev/shared-assets/models/Astronaut.glb')">🚀 Örnek Model</button>
+        </div>
+    </model-viewer>
 
-        let renderer, scene, camera, reticle;
-        window.secilen = '1.glb';
-
-        init();
-
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            document.body.appendChild(renderer.domElement);
-            document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
-
-            const light = new THREE.AmbientLight(0xffffff, 3);
-            scene.add(light);
-
-            reticle = new THREE.Mesh(new THREE.RingGeometry(0.1, 0.11, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial());
-            reticle.matrixAutoUpdate = false;
-            reticle.visible = false;
-            scene.add(reticle);
-
-            const controller = renderer.xr.getController(0);
-            controller.addEventListener('select', () => {
-                if (reticle.visible) {
-                    document.getElementById('info').innerText = "Model Yukleniyor...";
-                    const loader = new GLTFLoader();
-                    loader.load(window.secilen, (gltf) => {
-                        const model = gltf.scene;
-                        
-                        // KESİN ÇÖZÜM: Modeli gözle görülür boyuta zorla
-                        model.scale.set(1, 1, 1); 
-                        
-                        reticle.matrix.decompose(model.position, model.quaternion, new THREE.Vector3());
-                        scene.add(model);
-                        document.getElementById('info').innerText = "YÜKLENDİ! Modeli Görmüyorsanız Yere İyice Bakın.";
-                    }, undefined, (e) => {
-                        document.getElementById('info').innerText = "HATA: Dosya Bulunamadı!";
-                    });
-                }
-            });
-            scene.add(controller);
-            renderer.setAnimationLoop(render);
-        }
-
-        function render(timestamp, frame) {
-            if (frame) {
-                const session = renderer.xr.getSession();
-                const referenceSpace = renderer.xr.getReferenceSpace();
-                session.requestReferenceSpace('viewer').then((refSpace) => {
-                    session.requestHitTestSource({ space: refSpace }).then((source) => {
-                        const results = frame.getHitTestResults(source);
-                        if (results.length) {
-                            reticle.visible = true;
-                            reticle.matrix.fromArray(results[0].getPose(referenceSpace).transform.matrix);
-                            document.getElementById('info').innerText = "Zemin Bulundu! Dokun ve Koy.";
-                        } else {
-                            reticle.visible = false;
-                            document.getElementById('info').innerText = "Zemin Aranıyor... Telefonu Yere Tutup Gezdir.";
-                        }
-                    });
-                });
-            }
-            renderer.render(scene, camera);
+    <script>
+        function degistir(link) {
+            const mv = document.querySelector('#besir');
+            mv.setAttribute('src', link);
         }
     </script>
+
 </body>
 </html>
