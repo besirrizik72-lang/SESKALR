@@ -1,97 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
     <meta charset="utf-8">
-    <title>Besir AR - Nik Lever Mantığı</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Besir AR Tekli Modul</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; }
-        #menu { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
-        button { padding: 10px; border-radius: 10px; border: none; background: #333; color: white; cursor: pointer; }
-        button.active { background: #007bff; }
+        body { margin: 0; background-color: #ffffff; }
+        model-viewer { 
+            width: 100vw; 
+            height: 100vh; 
+            --ar-button-display: block; /* AR butonunu zorla göster */
+        }
+        #ar-button {
+            background-color: #000;
+            border-radius: 10px;
+            border: none;
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
-    <div id="menu">
-        <button onclick="window.currentModel='1.glb'">🛋️ 1</button>
-        <button onclick="window.currentModel='2.glb'">💺 2</button>
-        <button onclick="window.currentModel='3.glb'">☕ 3</button>
-    </div>
 
-    <script type="module">
-        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0/build/three.module.js';
-        import { ARButton } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/webxr/ARButton.js';
-        import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/GLTFLoader.js';
+    <model-viewer 
+        src="1.glb" 
+        ar 
+        ar-modes="webxr scene-viewer quick-look" 
+        camera-controls 
+        shadow-intensity="1" 
+        ar-placement="floor"
+        alt="Besir AR Mobilya Modeli">
+        
+        <button slot="ar-button" id="ar-button">
+            📸 ODANA KOY
+        </button>
 
-        let renderer, scene, camera, reticle;
-        window.currentModel = '1.glb';
+    </model-viewer>
 
-        init();
-        animate();
-
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-            
-            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-            scene.add(light);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            document.body.appendChild(renderer.domElement);
-
-            document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
-
-            reticle = new THREE.Mesh(
-                new THREE.RingGeometry(0.1, 0.11, 32).rotateX(-Math.PI / 2),
-                new THREE.MeshBasicMaterial()
-            );
-            reticle.matrixAutoUpdate = false;
-            reticle.visible = false;
-            scene.add(reticle);
-
-            const controller = renderer.xr.getController(0);
-            controller.addEventListener('select', onSelect);
-            scene.add(controller);
-        }
-
-        function onSelect() {
-            if (reticle.visible) {
-                const loader = new GLTFLoader();
-                // NİK LEVER MANTIĞI: Her tıkta yeni model ekle
-                loader.load(window.currentModel, function (gltf) {
-                    const model = gltf.scene;
-                    reticle.matrix.decompose(model.position, model.quaternion, model.scale);
-                    model.scale.set(0.5, 0.5, 0.5); // Boyut sabitleme
-                    scene.add(model); // ESKİSİ SİLİNMEZ, YENİSİ GELİR
-                });
-            }
-        }
-
-        function animate() {
-            renderer.setAnimationLoop(render);
-        }
-
-        function render(timestamp, frame) {
-            if (frame) {
-                const session = renderer.xr.getSession();
-                const referenceSpace = renderer.xr.getReferenceSpace();
-                session.requestReferenceSpace('viewer').then((refSpace) => {
-                    session.requestHitTestSource({ space: refSpace }).then((source) => {
-                        const results = frame.getHitTestResults(source);
-                        if (results.length) {
-                            reticle.visible = true;
-                            reticle.matrix.fromArray(results[0].getPose(referenceSpace).transform.matrix);
-                        } else {
-                            reticle.visible = false;
-                        }
-                    });
-                });
-            }
-            renderer.render(scene, camera);
-        }
-    </script>
 </body>
 </html>
